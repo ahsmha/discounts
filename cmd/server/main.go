@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ahsmha/discount-service/internal/models"
-	"github.com/ahsmha/discount-service/internal/repository"
-	"github.com/ahsmha/discount-service/internal/service"
-	"github.com/ahsmha/discount-service/testdata"
+	"github.com/ahsmha/discounts/internal/interfaces"
+	"github.com/ahsmha/discounts/internal/models"
+	"github.com/ahsmha/discounts/internal/repositories"
+	"github.com/ahsmha/discounts/internal/services"
+	"github.com/ahsmha/discounts/testdata"
 )
 
 func main() {
-	repo := repository.NewMemoryDiscountRepository()
+	repo := repositories.NewInMemoryDiscountRepository()
 	memoryRepo, ok := repo.(interface{ SeedDiscounts([]models.Discount) error })
 	if !ok {
 		log.Fatal("Repository does not support seeding")
@@ -23,12 +24,12 @@ func main() {
 		log.Fatalf("Failed to seed discounts: %v", err)
 	}
 
-	discountService := service.NewDiscountService(repo)
+	discountService := services.NewDiscountService(repo)
 
 	runDemonstration(discountService)
 }
 
-func runDemonstration(discountService service.DiscountService) {
+func runDemonstration(discountService interfaces.IDiscountService) {
 	ctx := context.Background()
 
 	fmt.Println("\n📋 Running Multiple Discount Scenario Demonstration")

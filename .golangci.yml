@@ -1,0 +1,92 @@
+version: "2"
+severity:
+  default: <severity>
+  rules:
+    - linters:
+        - dupl
+      severity: info
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
+  skip-dirs:
+    - bin
+    - vendor
+    - mocks
+  skip-files:
+    - ".*\\.pb\\.go$"
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  revive:
+    enable-all-rules: true
+    rules:
+      - name: package-comments
+        Disabled: true
+      - name: exported
+        Disabled: true
+
+  govet:
+    check-shadowing: true
+  gocyclo:
+    min-complexity: 15
+  gocognit:
+    min-complexity: 20
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  depguard:
+    packages:
+      - github.com/sirupsen/logrus
+    packages-with-error-message:
+      - github.com/sirupsen/logrus: "logging is allowed only by logutils.Log"
+  misspell:
+    locale: US
+    ignore-words:
+      - cancelled
+  lll:
+    line-length: 140
+  goimports:
+    local-prefixes: github.com/ahsmha/discounts
+  funlen:
+    lines: 100
+    statements: 50
+  errorlint:
+    errorf: true
+
+linters:
+  disable-all: true
+  enable:
+    - revive
+    - mnd
+    - staticcheck
+    - govet
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - revive
+        - mnd
+        - staticcheck
+        - govet
+    - path: testdata
+      linters:
+        - revive
+        - mnd
+        - staticcheck
+        - govet
+    - linters:
+      source: "^//go:generate "
+  exclude-use-default: false
+  exclude-case-sensitive: false
+  include:
+    - EXC0002
+  max-issues-per-linter: 0
+  max-same-issues: 0

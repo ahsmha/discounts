@@ -1,6 +1,6 @@
-module github.com/ahsmha/discount-service
+module github.com/ahsmha/discounts
 
-go 1.24
+go 1.24.3
 
 require (
 	github.com/shopspring/decimal v1.4.0

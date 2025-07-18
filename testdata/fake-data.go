@@ -3,7 +3,7 @@ package testdata
 import (
 	"time"
 
-	"github.com/ahsmha/discount-service/internal/models"
+	"github.com/ahsmha/discounts/internal/models"
 	"github.com/shopspring/decimal"
 )
 
