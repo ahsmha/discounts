@@ -46,10 +46,16 @@ func TestDiscountService_CalculateCartDiscounts(t *testing.T) {
 			cartItems: []models.CartItem{
 				{
 					Product: models.Product{
-						ID:           "prod-001",
-						Brand:        "PUMA",
-						BrandTier:    models.BrandTierPremium,
-						Category:     "T-shirts",
+						ID: "prod-001",
+						Brand: models.Brand{
+							ID:   "PUMA",
+							Name: "PUMA",
+							Tier: models.BrandTierPremium,
+						},
+						Category: models.Category{
+							ID:   "T-shirts",
+							Name: "T-shirts",
+						},
 						BasePrice:    decimal.NewFromInt(1000),
 						CurrentPrice: decimal.NewFromInt(1000), // Start with base price
 					},
@@ -68,10 +74,16 @@ func TestDiscountService_CalculateCartDiscounts(t *testing.T) {
 			cartItems: []models.CartItem{
 				{
 					Product: models.Product{
-						ID:           "prod-002",
-						Brand:        "Nike",
-						BrandTier:    models.BrandTierPremium,
-						Category:     "Shoes",
+						ID: "prod-002",
+						Brand: models.Brand{
+							ID:   "Nike",
+							Name: "Nike",
+							Tier: models.BrandTierPremium,
+						},
+						Category: models.Category{
+							ID:   "Shoes",
+							Name: "Shoes",
+						},
 						BasePrice:    decimal.NewFromInt(5000),
 						CurrentPrice: decimal.NewFromInt(5000),
 					},
@@ -90,10 +102,16 @@ func TestDiscountService_CalculateCartDiscounts(t *testing.T) {
 			cartItems: []models.CartItem{
 				{
 					Product: models.Product{
-						ID:           "prod-001",
-						Brand:        "PUMA",
-						BrandTier:    models.BrandTierPremium,
-						Category:     "T-shirts",
+						ID: "prod-001",
+						Brand: models.Brand{
+							ID:   "PUMA",
+							Name: "PUMA",
+							Tier: models.BrandTierPremium,
+						},
+						Category: models.Category{
+							ID:   "T-shirts",
+							Name: "T-shirts",
+						},
 						BasePrice:    decimal.NewFromInt(1000),
 						CurrentPrice: decimal.NewFromInt(1000),
 					},
@@ -112,10 +130,16 @@ func TestDiscountService_CalculateCartDiscounts(t *testing.T) {
 			cartItems: []models.CartItem{
 				{
 					Product: models.Product{
-						ID:           "prod-004",
-						Brand:        "Zara",
-						BrandTier:    models.BrandTierRegular,
-						Category:     "Jeans",
+						ID: "prod-004",
+						Brand: models.Brand{
+							ID:   "Zara",
+							Name: "Zara",
+							Tier: models.BrandTierRegular,
+						},
+						Category: models.Category{
+							ID:   "Jeans",
+							Name: "Jeans",
+						},
 						BasePrice:    decimal.NewFromInt(1200),
 						CurrentPrice: decimal.NewFromInt(1200),
 					},
@@ -134,10 +158,16 @@ func TestDiscountService_CalculateCartDiscounts(t *testing.T) {
 			cartItems: []models.CartItem{
 				{
 					Product: models.Product{
-						ID:           "prod-003",
-						Brand:        "Adidas",
-						BrandTier:    models.BrandTierPremium,
-						Category:     "T-shirts",
+						ID: "prod-003",
+						Brand: models.Brand{
+							ID:   "Adidas",
+							Name: "Adidas",
+							Tier: models.BrandTierPremium,
+						},
+						Category: models.Category{
+							ID:   "T-shirts",
+							Name: "T-shirts",
+						},
 						BasePrice:    decimal.NewFromInt(500),
 						CurrentPrice: decimal.NewFromInt(500),
 					},
@@ -258,9 +288,16 @@ func TestDiscountService_ValidateDiscountCode(t *testing.T) {
 			cartItems: []models.CartItem{
 				{
 					Product: models.Product{
-						ID:           "prod-small",
-						Brand:        "TestBrand",
-						Category:     "TestCategory",
+						ID: "prod-small",
+						Brand: models.Brand{
+							ID:   "TestBrand",
+							Name: "TestBrand",
+							Tier: models.BrandTierPremium,
+						},
+						Category: models.Category{
+							ID:   "TestCategory",
+							Name: "TestCategory",
+						},
 						BasePrice:    decimal.NewFromInt(500),
 						CurrentPrice: decimal.NewFromInt(500),
 					},

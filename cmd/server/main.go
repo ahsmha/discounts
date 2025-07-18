@@ -43,8 +43,8 @@ func runDemonstration(discountService service.DiscountService) {
 	fmt.Printf("Cart Items:\n")
 	for _, item := range cartItems {
 		fmt.Printf("- %s %s (%s) x%d @ ₹%s each\n",
-			item.Product.Brand,
-			item.Product.Category,
+			item.Product.Brand.ID,
+			item.Product.Category.ID,
 			item.Size,
 			item.Quantity,
 			item.Product.CurrentPrice.String())
@@ -70,9 +70,9 @@ func runDemonstration(discountService service.DiscountService) {
 	fmt.Println("------------------------------")
 	fmt.Printf("Original Price: ₹%s\n", result.OriginalPrice.String())
 	fmt.Printf("Final Price: ₹%s\n", result.FinalPrice.String())
-	fmt.Printf("Total Savings: ₹%s (%.2f%%)\n",
+	fmt.Printf("Total Savings: ₹%s (%.2s%%)\n",
 		result.GetTotalDiscount().String(),
-		result.GetDiscountPercentage())
+		result.GetDiscountPercentage().String())
 
 	fmt.Println("\n🎯 Applied Discounts:")
 	for name, amount := range result.AppliedDiscounts {

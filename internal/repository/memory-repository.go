@@ -9,7 +9,6 @@ import (
 )
 
 // MemoryDiscountRepository implements DiscountRepository using in-memory storage
-// #todo: change back to smallcase
 type MemoryDiscountRepository struct {
 	discounts map[string]*models.Discount
 	codeIndex map[string]string // code -> id mapping

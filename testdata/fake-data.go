@@ -11,34 +11,58 @@ import (
 func GetSampleProducts() []models.Product {
 	return []models.Product{
 		{
-			ID:           "prod-001",
-			Brand:        "PUMA",
-			BrandTier:    models.BrandTierPremium,
-			Category:     "T-shirts",
+			ID: "prod-001",
+			Brand: models.Brand{
+				ID:   "PUMA",
+				Name: "PUMA",
+				Tier: models.BrandTierPremium,
+			},
+			Category: models.Category{
+				ID:   "T-shirts",
+				Name: "T-shirts",
+			},
 			BasePrice:    decimal.NewFromInt(1000),
 			CurrentPrice: decimal.NewFromInt(600), // After 40% brand discount
 		},
 		{
-			ID:           "prod-002",
-			Brand:        "Nike",
-			BrandTier:    models.BrandTierPremium,
-			Category:     "Shoes",
+			ID: "prod-002",
+			Brand: models.Brand{
+				ID:   "Nike",
+				Name: "Nike",
+				Tier: models.BrandTierPremium,
+			},
+			Category: models.Category{
+				ID:   "Shoes",
+				Name: "Shoes",
+			},
 			BasePrice:    decimal.NewFromInt(5000),
 			CurrentPrice: decimal.NewFromInt(5000), // No discount applied yet
 		},
 		{
-			ID:           "prod-003",
-			Brand:        "Adidas",
-			BrandTier:    models.BrandTierPremium,
-			Category:     "T-shirts",
+			ID: "prod-003",
+			Brand: models.Brand{
+				ID:   "Adidas",
+				Name: "Adidas",
+				Tier: models.BrandTierPremium,
+			},
+			Category: models.Category{
+				ID:   "T-shirts",
+				Name: "T-shirts",
+			},
 			BasePrice:    decimal.NewFromInt(800),
 			CurrentPrice: decimal.NewFromInt(800), // No discount applied yet
 		},
 		{
-			ID:           "prod-004",
-			Brand:        "Zara",
-			BrandTier:    models.BrandTierRegular,
-			Category:     "Jeans",
+			ID: "prod-004",
+			Brand: models.Brand{
+				ID:   "Zara",
+				Name: "Zara",
+				Tier: models.BrandTierRegular,
+			},
+			Category: models.Category{
+				ID:   "Jeans",
+				Name: "Jeans",
+			},
 			BasePrice:    decimal.NewFromInt(1200),
 			CurrentPrice: decimal.NewFromInt(1200), // No discount applied yet
 		},
@@ -88,7 +112,7 @@ func GetSampleCustomers() []models.CustomerProfile {
 // GetSamplePaymentInfo returns sample payment information
 func GetSamplePaymentInfo() []models.PaymentInfo {
 	iciciBank := "ICICI"
-	creditCard := "CREDIT"
+	creditCard := models.Credit
 
 	return []models.PaymentInfo{
 		{
@@ -236,10 +260,9 @@ func GetMultipleDiscountScenario() ([]models.CartItem, models.CustomerProfile, *
 	customers := GetSampleCustomers()
 	paymentInfo := GetSamplePaymentInfo()
 
-	// Cart with PUMA T-shirt
 	cartItems := []models.CartItem{
 		{
-			Product:  products[0], // PUMA T-shirt - already has 40% off (CurrentPrice: 600)
+			Product:  products[0],
 			Quantity: 2,
 			Size:     "M",
 		},
