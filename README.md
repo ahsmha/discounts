@@ -48,7 +48,7 @@ testdata/
 
 ```bash
 # Clone the repository
-git clone https://github.com/unifize/discount-service.git
+git clone https://github.com/ahsmha/discount-service.git
 cd discount-service
 
 # Install dependencies
@@ -112,9 +112,9 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/unifize/discount-service/internal/service"
-    "github.com/unifize/discount-service/internal/repository"
-    "github.com/unifize/discount-service/internal/models"
+    "github.com/ahsmha/discount-service/internal/service"
+    "github.com/ahsmha/discount-service/internal/repository"
+    "github.com/ahsmha/discount-service/internal/models"
 )
 
 func main() {
