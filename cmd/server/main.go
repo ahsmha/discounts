@@ -6,15 +6,16 @@ import (
 	"log"
 
 	"github.com/ahsmha/discounts/internal/interfaces"
-	"github.com/ahsmha/discounts/internal/models"
 	"github.com/ahsmha/discounts/internal/repositories"
 	"github.com/ahsmha/discounts/internal/services"
 	"github.com/ahsmha/discounts/testdata"
+	"github.com/ahsmha/discounts/tests"
 )
 
 func main() {
 	repo := repositories.NewInMemoryDiscountRepository()
-	memoryRepo, ok := repo.(interface{ SeedDiscounts([]models.Discount) error })
+	memoryRepo, ok := repo.(interfaces.DiscountSeeder)
+
 	if !ok {
 		log.Fatal("Repository does not support seeding")
 	}
@@ -26,10 +27,10 @@ func main() {
 
 	discountService := services.NewDiscountService(repo)
 
-	runDemonstration(discountService)
+	runMultipleDiscountScenarioDemo(discountService)
 }
 
-func runDemonstration(discountService interfaces.IDiscountService) {
+func runMultipleDiscountScenarioDemo(discountService interfaces.IDiscountService) {
 	ctx := context.Background()
 
 	fmt.Println("\n📋 Running Multiple Discount Scenario Demonstration")
@@ -39,7 +40,7 @@ func runDemonstration(discountService interfaces.IDiscountService) {
 	cartItems, customer, paymentInfo := testdata.GetMultipleDiscountScenario()
 
 	// Reset the PUMA T-shirt price to base price for demonstration
-	cartItems[0].Product.CurrentPrice = cartItems[0].Product.BasePrice
+	tests.ResetCartPricesToBase(cartItems)
 
 	fmt.Printf("Cart Items:\n")
 	for _, item := range cartItems {

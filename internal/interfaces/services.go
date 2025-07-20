@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/ahsmha/discounts/internal/models"
-	"github.com/shopspring/decimal"
 )
 
 // IDiscountService interface defines the contract for discount service operations
@@ -23,12 +22,4 @@ type IDiscountService interface {
 	// - Customer tier requirements
 	ValidateDiscountCode(ctx context.Context, code string, cartItems []models.CartItem,
 		customer models.CustomerProfile) (bool, error)
-}
-
-type IValidator interface {
-	ValidateDiscount(discount *models.Discount, cartItems []models.CartItem, customer models.CustomerProfile, paymentInfo *models.PaymentInfo) bool
-}
-
-type ICalculator interface {
-	CalculateDiscountAmount(discount *models.Discount, cartItems []models.CartItem, currentPrice decimal.Decimal) decimal.Decimal
 }

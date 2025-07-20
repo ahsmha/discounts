@@ -29,47 +29,6 @@ type Category struct {
 	Name string `json:"name"`
 }
 
-type Product struct {
-	ID           string          `json:"id"`
-	Brand        Brand           `json:"brand"`
-	Category     Category        `json:"category"`
-	BasePrice    decimal.Decimal `json:"base_price"`
-	CurrentPrice decimal.Decimal `json:"current_price"` // After brand/category discount
-}
-
-type CartItem struct {
-	Product  Product `json:"product"`
-	Quantity int     `json:"quantity"`
-	Size     string  `json:"size"`
-}
-
-func (ci *CartItem) GetTotalPrice() decimal.Decimal {
-	return ci.Product.CurrentPrice.Mul(decimal.NewFromInt(int64(ci.Quantity)))
-}
-
-// CardType represents the type of card payment.
-type CardType string
-
-const (
-	// Credit indicates payment by credit card.
-	Credit CardType = "CREDIT"
-	// Debit indicates payment by debit card.
-	Debit CardType = "DEBIT"
-)
-
-type PaymentMethod string
-
-const (
-	UPI  PaymentMethod = "UPI"
-	Card PaymentMethod = "CARD"
-)
-
-type PaymentInfo struct {
-	Method   PaymentMethod `json:"method"`
-	BankName *string       `json:"bank_name"`
-	CardType *CardType     `json:"card_type"`
-}
-
 type DiscountedPrice struct {
 	OriginalPrice    decimal.Decimal            `json:"original_price"`
 	FinalPrice       decimal.Decimal            `json:"final_price"`
@@ -134,11 +93,18 @@ func (d *Discount) IsValid() bool {
 		(d.UsageLimit == 0 || d.UsedCount < d.UsageLimit)
 }
 
-func (d *Discount) IsApplicableToProduct(product Product) bool {
-	for _, excludedBrandIDOrCategoryID := range d.ExcludedItems {
-		if excludedBrandIDOrCategoryID == product.Brand.ID || excludedBrandIDOrCategoryID == product.Category.ID {
-			return false
+func (d *Discount) IsExcluded(product Product) bool {
+	for _, excluded := range d.ExcludedItems {
+		if excluded == product.Brand.ID || excluded == product.Category.ID {
+			return true
 		}
+	}
+	return false
+}
+
+func (d *Discount) MatchesProduct(product Product) bool {
+	if d.IsExcluded(product) {
+		return false
 	}
 
 	switch d.Type {
@@ -147,7 +113,7 @@ func (d *Discount) IsApplicableToProduct(product Product) bool {
 	case DiscountTypeCategory:
 		return d.isInList(product.Category.ID, d.ApplicableTo)
 	case DiscountTypeVoucher:
-		return true // Vouchers are generally applicable to all products unless excluded
+		return true
 	default:
 		return true
 	}

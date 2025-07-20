@@ -34,7 +34,7 @@ func TestDiscountService_Integration_WorkingDemo(t *testing.T) {
 	cartItems, customer, paymentInfo := testdata.GetMultipleDiscountScenario()
 
 	// Ensure we start with the base price for proper calculation
-	cartItems[0].Product.CurrentPrice = cartItems[0].Product.BasePrice
+	ResetCartPricesToBase(cartItems)
 
 	t.Logf("Testing with cart items: %+v", cartItems)
 	t.Logf("Customer: %+v", customer)

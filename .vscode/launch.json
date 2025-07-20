@@ -1,0 +1,20 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch my simple program",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      // Either point directly at the .go file:
+      "program": "${workspaceFolder}/cmd/server/main.go",
+      // Or to the package directory:
+      // "program": "${workspaceFolder}",
+      "env": {},            // (optional) env vars
+      "args": [],           // (optional) command-line args
+      "buildFlags": ""      // (optional) e.g. "-tags=integration"
+    }
+  ]
+}

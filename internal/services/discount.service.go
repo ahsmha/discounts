@@ -5,29 +5,25 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/ahsmha/discounts/internal/discount"
 	"github.com/ahsmha/discounts/internal/interfaces"
 	"github.com/ahsmha/discounts/internal/models"
 	"github.com/ahsmha/discounts/pkg/errors"
 	"github.com/shopspring/decimal"
 )
 
-// discountService implements the DiscountService interface
 type discountService struct {
-	discountRepo interfaces.IDiscountRepository
-	calculator   DiscountCalculator
-	validator    DiscountValidator
+	discountRepo    interfaces.IDiscountRepository
+	strategyFactory *discount.StrategyFactory
 }
 
-// NewDiscountService creates a new instance of DiscountService
 func NewDiscountService(discountRepo interfaces.IDiscountRepository) interfaces.IDiscountService {
 	return &discountService{
-		discountRepo: discountRepo,
-		calculator:   NewDiscountCalculator(),
-		validator:    NewDiscountValidator(),
+		discountRepo:    discountRepo,
+		strategyFactory: discount.NewStrategyFactory(),
 	}
 }
 
-// CalculateCartDiscounts implements the main discount calculation logic
 func (ds *discountService) CalculateCartDiscounts(ctx context.Context, cartItems []models.CartItem,
 	customer models.CustomerProfile, paymentInfo *models.PaymentInfo) (*models.DiscountedPrice, error) {
 
@@ -35,19 +31,16 @@ func (ds *discountService) CalculateCartDiscounts(ctx context.Context, cartItems
 		return nil, errors.NewValidationError("cart is empty")
 	}
 
-	// Calculate original price
 	originalPrice := decimal.Zero
 	for _, item := range cartItems {
 		originalPrice = originalPrice.Add(item.GetTotalPrice())
 	}
 
-	// Get all applicable discounts
 	allDiscounts, err := ds.discountRepo.GetActiveDiscounts(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get active discounts: %w", err)
+		return nil, fmt.Errorf("failed to get discounts: %w", err)
 	}
 
-	// Initialize result
 	result := &models.DiscountedPrice{
 		OriginalPrice:    originalPrice,
 		FinalPrice:       originalPrice,
@@ -55,55 +48,48 @@ func (ds *discountService) CalculateCartDiscounts(ctx context.Context, cartItems
 		Message:          "No discounts applied",
 	}
 
-	// Step 1: Apply brand/category discounts
-	brandCategoryDiscounts := ds.filterDiscountsByType(allDiscounts, []models.DiscountType{
-		models.DiscountTypeBrand,
-		models.DiscountTypeCategory,
+	// Sort by priority
+	sort.Slice(allDiscounts, func(i, j int) bool {
+		return allDiscounts[i].Priority > allDiscounts[j].Priority
 	})
 
-	applicableBrandCategoryDiscounts := ds.filterApplicableDiscounts(brandCategoryDiscounts, cartItems, customer, paymentInfo)
-	if len(applicableBrandCategoryDiscounts) > 0 {
-		err := ds.applyDiscounts(ctx, applicableBrandCategoryDiscounts, cartItems, result)
-		if err != nil {
-			return nil, fmt.Errorf("failed to apply brand/category discounts: %w", err)
+	for _, discount := range allDiscounts {
+		strategy := ds.strategyFactory.Get(discount.Type)
+		if strategy == nil {
+			continue
+		}
+
+		applicable := strategy.IsApplicable(&discount, cartItems, customer, paymentInfo)
+		if !applicable {
+			continue
+		}
+
+		amount := strategy.Calculate(&discount, cartItems, result.FinalPrice)
+		if amount.GreaterThan(decimal.Zero) {
+			result.FinalPrice = result.FinalPrice.Sub(amount)
+			result.AppliedDiscounts[discount.Name] = amount
+
+			// Track usage
+			err := ds.discountRepo.IncrementUsageCount(ctx, discount.ID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to increment usage: %w", err)
+			}
 		}
 	}
 
-	// Step 2: Apply voucher codes (if any)
-	voucherDiscounts := ds.filterDiscountsByType(allDiscounts, []models.DiscountType{models.DiscountTypeVoucher})
-	applicableVoucherDiscounts := ds.filterApplicableDiscounts(voucherDiscounts, cartItems, customer, paymentInfo)
-	if len(applicableVoucherDiscounts) > 0 {
-		err := ds.applyDiscounts(ctx, applicableVoucherDiscounts, cartItems, result)
-		if err != nil {
-			return nil, fmt.Errorf("failed to apply voucher discounts: %w", err)
-		}
-	}
-
-	// Step 3: Apply bank offers
-	bankDiscounts := ds.filterDiscountsByType(allDiscounts, []models.DiscountType{models.DiscountTypeBank})
-	applicableBankDiscounts := ds.filterApplicableDiscounts(bankDiscounts, cartItems, customer, paymentInfo)
-	if len(applicableBankDiscounts) > 0 {
-		err := ds.applyDiscounts(ctx, applicableBankDiscounts, cartItems, result)
-		if err != nil {
-			return nil, fmt.Errorf("failed to apply bank discounts: %w", err)
-		}
-	}
-
-	// Update final message
 	if len(result.AppliedDiscounts) > 0 {
-		result.Message = fmt.Sprintf("Applied %d discount(s) - Total savings: %s",
+		result.Message = fmt.Sprintf("Applied %d discount(s) - Savings: %s",
 			len(result.AppliedDiscounts), result.GetTotalDiscount().String())
 	}
 
 	return result, nil
 }
 
-// ValidateDiscountCode validates if a discount code can be applied
 func (ds *discountService) ValidateDiscountCode(ctx context.Context, code string, cartItems []models.CartItem,
 	customer models.CustomerProfile) (bool, error) {
 
 	if code == "" {
-		return false, errors.NewValidationError("discount code cannot be empty")
+		return false, errors.NewValidationError("code cannot be empty")
 	}
 
 	discount, err := ds.discountRepo.GetDiscountByCode(ctx, code)
@@ -111,65 +97,13 @@ func (ds *discountService) ValidateDiscountCode(ctx context.Context, code string
 		if errors.IsNotFoundError(err) {
 			return false, nil
 		}
-		return false, fmt.Errorf("failed to get discount by code: %w", err)
+		return false, fmt.Errorf("repo error: %w", err)
 	}
 
-	return ds.validator.ValidateDiscount(discount, cartItems, customer, nil), nil
-}
-
-// filterDiscountsByType filters discounts by their types
-func (ds *discountService) filterDiscountsByType(discounts []models.Discount, types []models.DiscountType) []models.Discount {
-	var filtered []models.Discount
-	typeMap := make(map[models.DiscountType]bool)
-	for _, t := range types {
-		typeMap[t] = true
+	strat := ds.strategyFactory.Get(discount.Type)
+	if strat == nil {
+		return false, nil
 	}
 
-	for _, discount := range discounts {
-		if typeMap[discount.Type] {
-			filtered = append(filtered, discount)
-		}
-	}
-	return filtered
-}
-
-// filterApplicableDiscounts filters discounts that are applicable to the given cart and customer
-func (ds *discountService) filterApplicableDiscounts(discounts []models.Discount, cartItems []models.CartItem,
-	customer models.CustomerProfile, paymentInfo *models.PaymentInfo) []models.Discount {
-
-	var applicable []models.Discount
-	for _, discount := range discounts {
-		if ds.validator.ValidateDiscount(&discount, cartItems, customer, paymentInfo) {
-			applicable = append(applicable, discount)
-		}
-	}
-
-	// Sort by priority (highest first)
-	sort.Slice(applicable, func(i, j int) bool {
-		return applicable[i].Priority > applicable[j].Priority
-	})
-
-	return applicable
-}
-
-// applyDiscounts applies a list of discounts to the cart and updates the result
-func (ds *discountService) applyDiscounts(ctx context.Context, discounts []models.Discount,
-	cartItems []models.CartItem, result *models.DiscountedPrice) error {
-
-	for _, discount := range discounts {
-		discountAmount := ds.calculator.CalculateDiscountAmount(&discount, cartItems, result.FinalPrice)
-
-		if discountAmount.GreaterThan(decimal.Zero) {
-			result.FinalPrice = result.FinalPrice.Sub(discountAmount)
-			result.AppliedDiscounts[discount.Name] = discountAmount
-
-			// Update usage count
-			err := ds.discountRepo.IncrementUsageCount(ctx, discount.ID)
-			if err != nil {
-				return fmt.Errorf("failed to increment usage count for discount %s: %w", discount.ID, err)
-			}
-		}
-	}
-
-	return nil
+	return strat.IsApplicable(discount, cartItems, customer, nil), nil
 }

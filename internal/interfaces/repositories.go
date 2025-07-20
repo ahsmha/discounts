@@ -29,3 +29,7 @@ type IDiscountRepository interface {
 	// IncrementUsageCount increments the usage count for a discount
 	IncrementUsageCount(ctx context.Context, id string) error
 }
+
+type DiscountSeeder interface {
+	SeedDiscounts([]models.Discount) error
+}
